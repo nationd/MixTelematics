@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ClosestVehiclePositionLocator": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
