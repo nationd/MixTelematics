@@ -3,6 +3,7 @@ using ClosestVehiclePositionLocator.Iservices;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,20 +18,28 @@ namespace ClosestVehiclePositionLocator.Services
         {
             var vehicleAndPositions = new Dictionary<int, VehicleDetails>();
 
+            // Time taken to locate closest vehicles to given positions 0:01.179
+            //Parallel.For(0, positions.Count, i =>
+            //{
+            //     // int index = FindNearestNeighbor(vehicles, positions[i].Longitude, positions[i].Longitude);
+
+            //});
+
+
+            //Time taken to locate closest vehicles to given positions 0:01.379
             Parallel.ForEach(positions, position =>
             {
-                Console.WriteLine("Distance calculations started");
-                var timer = new Stopwatch();
-                timer.Start();
+                Console.WriteLine("Distance calculations per point started");
+                var vehicleTime = new Stopwatch();
+                vehicleTime.Start();
 
                 var closest = vehicles.Min(x => DistanceCalculator.Distance(position.Latitude, position.Longitude,
                     x.Position.Latitude, x.Position.Longitude));
 
-                timer.Stop();
-               var timeTaken = timer.Elapsed;
+                vehicleTime.Stop();
+                var timeTakenPerVehicle = vehicleTime.Elapsed;
 
-                Console.WriteLine("Distance calculations ended " + timeTaken.ToString(@"m\:ss\.fff"));
-               // var closest = vehicles.Aggregate((result, item) => result.Position.Latitude);
+                Console.WriteLine("Distance calculations per point ended " + timeTakenPerVehicle.ToString(@"m\:ss\.fff"));
 
                 var vehicleDetails = vehicles.First(x => DistanceCalculator.Distance(position.Latitude, position.Longitude,
                     x.Position.Latitude, x.Position.Longitude) == closest);
@@ -39,6 +48,24 @@ namespace ClosestVehiclePositionLocator.Services
 
             });
             return vehicleAndPositions;
+        }
+
+
+        //Tried this options, it is not effient as the initial one
+        private int FindNearestNeighbor(List<VehicleDetails> vehicles, double latitude, double longitude)
+        {
+            double min_dist = double.MaxValue;
+            int min_index = -1;
+            Parallel.For(0, vehicles.Count, i =>
+            {
+                double dist = DistanceCalculator.Distance(vehicles[i].Position.Latitude, vehicles[i].Position.Longitude, latitude, longitude);
+                if (dist < min_dist)
+                {
+                    min_dist = dist;
+                    min_index = i;
+                }
+            });
+            return min_index;
         }
     }
 }

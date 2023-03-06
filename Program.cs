@@ -36,10 +36,10 @@ Console.WriteLine();
 Console.WriteLine("Positions and Respective closest Vehicle Details");
 Console.WriteLine();
 
-givenPositions.positions.ForEach(position => 
+givenPositions.positions.ForEach(position =>
 {
     Console.WriteLine($"Position Details, Latitude: {position.Latitude} Longitude: {position.Longitude}");
-    Console.WriteLine($"Vehicle Details, Registration {processedPositions[position.PositionId].VehicleRegistration}, Latitude: {processedPositions[position.PositionId].Position.Latitude} Longitude: {processedPositions[position.PositionId].Position.Longitude}");
+    Console.WriteLine($"Vehicle Details,Latitude: {processedPositions[position.PositionId].Position.Latitude} Longitude: {processedPositions[position.PositionId].Position.Longitude}, Registration {processedPositions[position.PositionId].VehicleRegistration}");
     Console.WriteLine();
 
 });
