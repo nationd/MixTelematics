@@ -1,71 +1,58 @@
-﻿using ClosestVehiclePositionLocator.Helpers;
-using ClosestVehiclePositionLocator.Iservices;
-using System;
-using System.Collections.Generic;
+﻿using ClosestVehiclePositionLocator.Iservices;
+using ClosestVehiclePositionLocator.Models;
+using KdTree.Math;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace ClosestVehiclePositionLocator.Services
 {
     public class PositionProcessorService : IPositionProcessorService
     {
-        public PositionProcessorService() { }
-
-        public Dictionary<int, VehicleDetails> GetVehiclePositions(List<VehicleDetails> vehicles, List<Position> positions)
+        public List<PositionAndClosestVehicle> GetVehiclePositions(VehicleDetails[] vehicles, Position[] positions)
         {
-            var vehicleAndPositions = new Dictionary<int, VehicleDetails>();
+            var vehicleAndPositions = new List<PositionAndClosestVehicle>();
+            Console.WriteLine("\n storing vehicles started");
+            var vehicleTime = new Stopwatch();
+            vehicleTime.Start();
+            var vehiclesTree = StoreVehicles(vehicles);
+            vehicleTime.Stop();
+            var timeTakenPerVehicle = vehicleTime.Elapsed;
 
-            // Time taken to locate closest vehicles to given positions 0:01.179
-            //Parallel.For(0, positions.Count, i =>
-            //{
-            //     // int index = FindNearestNeighbor(vehicles, positions[i].Longitude, positions[i].Longitude);
+            Console.WriteLine("time taken to store vehicles " + timeTakenPerVehicle.ToString(@"m\:ss\.fff"));
 
-            //});
+            Console.WriteLine(" \n Closest vehicle retrieval starting");
+            vehicleTime.Reset();
 
-
-            //Time taken to locate closest vehicles to given positions 0:01.379
-            Parallel.ForEach(positions, position =>
+            vehicleTime.Start();
+            Parallel.For(0, positions.Length, i =>
             {
-                Console.WriteLine("Distance calculations per point started");
-                var vehicleTime = new Stopwatch();
-                vehicleTime.Start();
+                var closest = vehiclesTree.GetNearestNeighbours(new[] { positions[i].Latitude, positions[i].Longitude }, 1).FirstOrDefault();
 
-                var closest = vehicles.Min(x => DistanceCalculator.Distance(position.Latitude, position.Longitude,
-                    x.Position.Latitude, x.Position.Longitude));
-
-                vehicleTime.Stop();
-                var timeTakenPerVehicle = vehicleTime.Elapsed;
-
-                Console.WriteLine("Distance calculations per point ended " + timeTakenPerVehicle.ToString(@"m\:ss\.fff"));
-
-                var vehicleDetails = vehicles.First(x => DistanceCalculator.Distance(position.Latitude, position.Longitude,
-                    x.Position.Latitude, x.Position.Longitude) == closest);
-
-                vehicleAndPositions.Add(position.PositionId, vehicleDetails);
+                if (null != closest)
+                {
+                    vehicleAndPositions.Add(new PositionAndClosestVehicle { Position = positions[i], Vehicle = closest.Value });
+                }
 
             });
+            vehicleTime.Stop();
+            timeTakenPerVehicle = vehicleTime.Elapsed;
+            Console.WriteLine("Retrieval of closest vehicles ended " + timeTakenPerVehicle.ToString(@"m\:ss\.fff"));
+
             return vehicleAndPositions;
         }
 
-
-        //Tried this options, it is not effient as the initial one
-        private int FindNearestNeighbor(List<VehicleDetails> vehicles, double latitude, double longitude)
+        //Store vehicles in kd-tree
+        public KdTree.KdTree<float, VehicleDetails> StoreVehicles(VehicleDetails[] vehicles)
         {
-            double min_dist = double.MaxValue;
-            int min_index = -1;
-            Parallel.For(0, vehicles.Count, i =>
+            var vehiclesTree = new KdTree.KdTree<float, VehicleDetails>(2, new FloatMath());
+
+            Parallel.For(0, vehicles.Length, (i) =>
             {
-                double dist = DistanceCalculator.Distance(vehicles[i].Position.Latitude, vehicles[i].Position.Longitude, latitude, longitude);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_index = i;
-                }
+                var item = vehicles[i];
+                vehiclesTree.Add(item.Key, item);
             });
-            return min_index;
+
+            return vehiclesTree;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace ClosestVehiclePositionLocator.Helpers
 {
     public class FileProcessor
     {
-        public static List<VehicleDetails> ProcessFile(string file)
+        public static VehicleDetails[] ProcessFile(string file)
         {
             if (!File.Exists(file))
             {
@@ -19,32 +19,32 @@ namespace ClosestVehiclePositionLocator.Helpers
             }
 
             var vehicleDetails = new VehicleDetails();
-            var vehicles = new List<VehicleDetails>();  
-            var vehicleAndPositions = new Dictionary<int, VehicleDetails>();           
+            var vehicles = new List<VehicleDetails>();
+            var vehicleAndPositions = new Dictionary<int, VehicleDetails>();
 
-            using (FileStream fs = new (file, FileMode.Open))
+            using (FileStream fs = new(file, FileMode.Open))
             {
                 using (BinaryReader br = new(fs))
                 {
                     while (br.BaseStream.Position < br.BaseStream.Length)
-                    { 
-                        vehicles.Add(new VehicleDetails 
+                    {
+                        vehicles.Add(new VehicleDetails
                         {
                             PositionId = br.ReadInt32(),
                             VehicleRegistration = br.ReadNullTerminatedString(),
-                            Position = new Position 
-                            { 
-                                Latitude = br.ReadSingle(),
-                                Longitude = br.ReadSingle()
-                            },
+                            //Position = new Position 
+                            // { 
+                            Latitude = br.ReadSingle(),
+                            Longitude = br.ReadSingle(),
+                            //},
                             RecordedTimeUTC = br.ReadUInt64()
-                        }  );
+                        });
 
                     }
                 }
             }
 
-            return vehicles;
+            return vehicles.ToArray();
         }
     }
 }

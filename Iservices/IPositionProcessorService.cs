@@ -1,7 +1,9 @@
-﻿namespace ClosestVehiclePositionLocator.Iservices
+﻿using ClosestVehiclePositionLocator.Models;
+
+namespace ClosestVehiclePositionLocator.Iservices
 {
     public interface IPositionProcessorService
     {
-        Dictionary<int, VehicleDetails> GetVehiclePositions(List<VehicleDetails> vehicles, List<Position> positions);
+        List<PositionAndClosestVehicle> GetVehiclePositions(VehicleDetails[] vehicles, Position[] positions);
     }
 }
